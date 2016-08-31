@@ -1,0 +1,6 @@
+Purpose:to satify the statistic requirements, I change the source code of statistics section.
+the file related see below:
+table_forum_forum.php   /source/class/table   add SQL query function
+stat_misc.htm		/template/default/forum/stat_misc.htm     change html template
+misc_stat.php		/source/module/misc                       logic process and template use
+lang_template.php 	/source/language/                     modify some hint information  
