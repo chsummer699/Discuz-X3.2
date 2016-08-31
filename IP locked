@@ -1,0 +1,15 @@
+code modify
+code location:/uc_client/model/user.php
+
+function loginfailed($username, $ip = '') {
+$username = substr(md5($username), 8, 15);
+if(!$ip) {
+$ip = $this->base->onlineip;
+}
+$this->db->query("UPDATE ".UC_DBTABLEPRE."failedlogins SET count=0, lastupdate='".$this->base->time."' WHERE ip='".$ip."' OR ip='$username'");
+/* $this->db->query("UPDATE ".UC_DBTABLEPRE."failedlogins SET count=count+1, lastupdate='".$this->base->time."' WHERE ip='".$ip."' OR ip='$username'");
+*/}
+
+another modify file:
+/include/lang/lang_message.php
+'login_invalid'=> 'login fail, please check your username or password!'
