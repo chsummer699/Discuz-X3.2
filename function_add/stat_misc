@@ -1,0 +1,185 @@
+function getstatvars_forumstat($fid) {
+	global $_G;
+	$xml = "<chart>\n";
+	$statvars = array();
+  $memberlist = $total = $bug = array();
+	$page = $_G['setting']['membermaxpages'] && isset($_GET['page']) && $_GET['page'] > $_G['setting']['membermaxpages'] ? 1 : $_GET['page'];
+
+  $before = $_GET['before'];
+  $before = (isset($before) && $before > 0 && $before <=  $_G['setting']['maxmodworksmonths']) ? intval($before) : 0 ;
+
+  $modworks_starttime = $_GET['modworks_starttime'];
+  $modworks_endtime = $_GET['modworks_endtime'];
+
+  list($now['year'], $now['month'], $now['day']) = explode("-", dgmdate(TIMESTAMP, 'Y-n-j'));
+
+  $monthlinks = array();
+  $uid = !empty($_GET['uid']) ? $_GET['uid'] : 0;
+  for($i = 0; $i <= $_G['setting']['maxmodworksmonths']; $i++) { 
+    $month = date("Y-m", mktime(0, 0, 0, $now['month'] - $i, 1, $now['year']));
+    if($i != $before) {
+      $monthlinks[$i] = "<li><a href=\"misc.php?mod=stat&op=forumstat&fid=$fid&before=$i\" hidefocus=\"true\">$month</a></li>";
+    } else {
+      if(!isset($_GET['before']) && $modworks_starttime && $modworks_endtime) {
+        $starttime = dgmdate(strtotime($modworks_starttime), 'Y-m-d');
+        $endtime = dgmdate(strtotime($modworks_endtime), 'Y-m-d');
+        $monthlinks[$i] = "<li><a href=\"misc.php?mod=stat&op=forumstat&fid=$fid&before=$i\" hidefocus=\"true\">$month</a></li>";
+      } else {
+        $starttime = $month.'-01';
+        $endtime = date("Y-m-01", mktime(0, 0, 0, $now['month'] - $i + 1 , 1, $now['year']));
+        $monthlinks[$i] = "<li class=\"xw1 a\"><a href=\"misc.php?mod=stat&op=forumstat&fid=$fid&before=$i\" hidefocus=\"true\">$month</a></li>";
+      }
+    }
+  }
+  $statvars['monthlinks'] = $monthlinks;
+ // $statvars['uid'] = $uid;
+	
+	$statvars['starttime'] = $starttime;
+	$statvars['endtime'] = $endtime;
+	
+	//add section begin exclude some vars above
+	
+	$start_line = intval(strtotime($starttime));
+  $end_line = intval(strtotime($endtime));
+  foreach(C::t('forum_forum')->get_authorid($fid,"forum_post") as $data){  
+			$memberlist[$data['authorid']] = array();
+		}
+	$num = count($memberlist);
+	$statvars['num'] = $num;
+$count = 1;	
+	foreach(C::t('forum_forum')->get_post_by_fid($fid,$start_line,$end_line,"forum_post") as $data){
+		if($data['first']){ 
+			$memberlist[$data['authorid']]['username'] = $data['author']; 
+			$memberlist[$data['authorid']]['uid'] = $data['authorid'];
+			$memberlist[$data['authorid']]['posts'] += 1;
+			$memberlist[$data['authorid']]['money'] += $data['rate']? 4:2 ;
+			$memberlist[$data['authorid']]['coin'] += $data['rate']? $data['rate']:0;
+			$memberlist[$data['authorid']]['error'] += $data['rate']? 1:0 ;
+			$memberlist[$data['authorid']]['message'] .= $data['rate']? $data['subject'].": ".$data['message']."<br>": '' ;
+			//$memberlist[$data['authorid']]['message'] = $data['rate']? $data['message']: '' ;
+
+			$total['posts']['total'] += 1;
+			$total['money']['total'] += $data['rate']? 4:2;
+			$total['coin']['total']  += $data['rate']? $data['rate']:0;
+			$total['errors']['total'] += $data['rate']? 1:0 ;
+			
+			if($data['rate']){
+				$bug[$count]['username'] = $data['author'];
+				$bug[$count]['message'] = $data['subject'].":<br> ".$data['message'];
+
+				 $count += 1;
+			}
+		}
+		else{
+		
+			$memberlist[$data['authorid']]['money'] += 1;
+			$total['money']['total'] += 1;
+		}
+		}
+
+	foreach($memberlist as $id => $member){
+		$memberlist[$id]['credits'] = $memberlist[$id]['posts'] + $memberlist[$id]['money'] + $memberlist[$id]['coin']*3;
+	}
+// sort the buglist
+	$bugtemp = arraySort($bug, 'username','asc');
+	$bug = $bugtemp;
+  
+//resort the id of the bug list
+	$count = 1;	
+	$temp = array();
+  foreach($bug as $id => $value){
+			$temp[$count]['username'] = $bug[$id]['username'];
+			$temp[$count]['message'] = $bug[$id]['message'];
+			$count += 1;
+	}
+	
+	$bug = $temp;	
+
+
+	$statvars['bug'] = $bug;
+//sort the memberlist
+	$memberlisttemp = arraySort($memberlist,'credits','desc');
+	$memberlist = $memberlisttemp;
+	$statvars['total'] = $total;
+	$multipage = multi($num, $_G['setting']['memberperpage'], $page, 'misc.php?mod=stat&op=forumstat&fid='.$fid.'&order='.rawurlencode($_GET['order']).'&asc='.rawurlencode($_GET['asc']), $_G['setting']['membermaxpages']);
+	$statvars['multipage'] = $multipage;
+	
+  $statvars['memberlist'] = $memberlist;
+  
+  
+
+	$monthdays = array('31', '29', '31', '30', '31', '30', '31', '31', '30', '31', '30', '31');
+	if(!$fid) {
+		$query = C::t('forum_forum')->fetch_all_fids();
+		$forums = array();
+		foreach($query as $val) {
+			$forums[] = array('fid' => $val['fid'], 'type' => $val['type'], 'name' => $val['name'], 'posts' => $val['posts']);
+		}
+		$statvars['forums'] = $forums;
+	} else {
+		$foruminfo = C::t('forum_forum')->fetch($fid);
+		$statvars['foruminfo'] = array('fid' => $foruminfo['fid'], 'name' => $foruminfo['name'], 'posts' => $foruminfo['posts'], 'threads' => $foruminfo['threads'], 'todayposts' => $foruminfo['todayposts']);
+
+		$current_date = $end_date = date('Y-m-d');
+		$current_month = $end_month = date('Y-m');
+		$current_month_start = $end_month_start = $current_month . '-01';
+		if($_GET['month']) {
+			$end_month = trim($_GET['month']);
+			$month = substr($end_month, strpos($end_month, '-') + 1);
+			$end_date = $end_month . '-' . $monthdays[$month - 1];
+			$end_month_start = $end_month . '-' . '01';
+		}
+		$statvars['month'] = $end_month;
+		$logs = array();
+		$xml .= "<xaxis>\n";
+		$xmlvalue = '';
+		$xaxisindex = 0;
+		foreach(C::t('forum_statlog')->fetch_all_by_logdate($end_month_start, $end_date, $fid) as $log) {
+			$logs[] = $log;
+			list($yyyy, $mm, $dd) = explode('-', $log['logdate']);
+			$xaxisindex++;
+			$xml .= "<value xid=\"{$xaxisindex}\">{$mm}{$dd}</value>\n";
+			$xmlvalue .= "<value xid=\"{$xaxisindex}\">{$log['value']}</value>\n";
+		}
+		$xml .= "</xaxis>\n";
+		$xml .= "<graphs>\n";
+		$xml .= "<graph gid=\"0\" title=\"".diconv(lang('spacecp', 'do_stat_post_number'), CHARSET, 'UTF-8')."\">\n";
+		$xml .= $xmlvalue;
+		$xml .= "</graph>\n";
+		$xml .= "</graphs>\n";
+		$xml .= "</chart>\n";
+		if($_GET['xml']) {
+			@header("Expires: -1");
+			@header("Cache-Control: no-store, private, post-check=0, pre-check=0, max-age=0", FALSE);
+			@header("Pragma: no-cache");
+			@header("Content-type: application/xml; charset=utf-8");
+			echo $xml;
+			exit;
+		}
+		$statvars['logs'] = $logs;
+
+		$mindate = C::t('forum_statlog')->fetch_min_logdate_by_fid($fid);
+		list($minyear, $minmonth, $minday) = explode('-', $mindate);
+		$minmonth = $minyear . '-' . $minmonth;
+		$month = $minmonth;
+		$monthlist = array();
+		while(datecompare($month, $current_month) <= 0) {
+			$monthlist[] = $month;
+			$month = getnextmonth($month);
+		}
+		$statvars['monthlist'] = $monthlist;
+    
+		$monthposts = array();
+		foreach(C::t('forum_statlog')->fetch_all_by_fid_type($fid) as $data) {
+			list($year, $month, $day) = explode('-', $data['logdate']);
+			if(isset($monthposts[$year.'-'.$month])) {
+				$monthposts[$year.'-'.$month] += $data['value'];
+			} else {
+				$monthposts[$year.'-'.$month] = $data['value'];
+			}
+		}
+		$statvars['monthposts'] = $monthposts;
+	}
+	$statvars['statuspara'] = "path=&settings_file=data/stat_setting.xml&data_file=".urlencode("misc.php?mod=stat&op=forumstat&fid=$fid&month={$_GET['month']}&xml=1");
+	return $statvars;
+}
