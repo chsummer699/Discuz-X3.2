@@ -1,0 +1,106 @@
+<!--{if $op == 'modworks' && $uid}-->    对于有uid 的情况
+	{lang stats_modworks} - $username
+	<!--{echo "\r\n";}-->
+	{$starttime} {lang stats_modworks_to} {$endtime} {lang stats_modworks_data}
+	<!--{echo "\r\n";}-->
+	{lang time},
+	<!--{loop $modactioncode $key $val}-->
+		$val,<!--{/loop}-->
+	{lang stats_modworks_total}
+	<!--{echo "\n";}-->
+
+	<!--{loop $modactions $day $modaction}-->
+		$day,
+		<!--{loop $modactioncode $key $val}-->
+			<!--{if $modaction[$key]['posts']}-->$modaction[$key][count],<!--{else}-->,<!--{/if}-->
+		<!--{/loop}-->
+		$modaction[total]
+		<!--{echo "\n";}-->
+	<!--{/loop}-->
+	{lang stats_modworks_total},
+	<!--{loop $modactioncode $key $val}-->
+		<!--{if $totalactions[$key]['posts']}-->$totalactions[$key][count],<!--{else}-->,<!--{/if}--> if else 是discuz的模板
+	<!--{/loop}-->
+	$totalactions[total]
+
+<!--{elseif $op == 'modworks'}--><!--没有uid的情况-->
+	{lang stats_modworks} - {lang stats_modworks_all} 对应表的标题  
+	<!--{echo "\r\n";}-->
+	{$starttime} {lang stats_modworks_to} {$endtime} {lang stats_modworks_data}
+	<!--{echo "\r\n";}-->
+	{lang username},
+	<!--{loop $modactioncode $key $val}-->
+		$val,<!--{/loop}-->
+	{lang stats_modworks_total}
+	<!--{echo "\r\n";}--> 换行的标志
+	<!--{loop $members $uid $member}-->  根据每一个member来
+		<!--{eval echo strip_tags($member[username]);}-->,
+		<!--{loop $modactioncode $key $val}-->
+			<!--{if $member[$key]['posts']}-->{$member[$key][count]},<!--{else}-->,<!--{/if}-->
+		<!--{/loop}-->
+		$member[total]
+		<!--{echo "\n";}-->
+	<!--{/loop}-->
+	<!--{if $members}-->
+		{lang stats_modworks_total},
+		<!--{loop $modactioncode $key $val}-->
+			<!--{if $total[$key]['posts']}-->{$total[$key][count]},<!--{else}-->,<!--{/if}-->
+		<!--{/loop}-->
+		$total[total]
+	<!--{/if}-->
+<!--{/if}-->
+
+
+
+<!--{if $op == 'forumstat' && $uid}-->    对于有uid 的情况
+	{lang stats_modworks} - $username
+	<!--{echo "\r\n";}-->
+	{$starttime} {lang stats_modworks_to} {$endtime} {lang stats_modworks_data}
+	<!--{echo "\r\n";}-->
+	{lang time},
+	<!--{loop $modactioncode $key $val}-->
+		$val,<!--{/loop}-->
+	{lang stats_modworks_total}
+	<!--{echo "\n";}-->
+
+	<!--{loop $modactions $day $modaction}-->
+		$day,
+		<!--{loop $modactioncode $key $val}-->
+			<!--{if $modaction[$key]['posts']}-->$modaction[$key][count],<!--{else}-->,<!--{/if}-->
+		<!--{/loop}-->
+		$modaction[total]
+		<!--{echo "\n";}-->
+	<!--{/loop}-->
+	{lang stats_modworks_total},
+	<!--{loop $modactioncode $key $val}-->
+		<!--{if $totalactions[$key]['posts']}-->$totalactions[$key][count],<!--{else}-->,<!--{/if}--> if else 是discuz的模板
+	<!--{/loop}-->
+	$totalactions[total]
+
+<!--{elseif $op == 'forumstat'}--><!--没有uid的情况-->
+	 发帖统计                                {lang stats_modworks} - {lang stats_modworks_all} 对应表的标题  
+	<!--{echo "\r\n";}-->
+	{$starttime} {lang stats_modworks_to} {$endtime} {lang stats_modworks_data}
+	<!--{echo "\r\n";}-->
+	{lang username},
+	<!--{loop $modactioncode $key $val}-->
+		$val,<!--{/loop}-->
+	{lang stats_modworks_total}
+	<!--{echo "\r\n";}--> 换行的标志
+	<!--{loop $members $uid $member}-->  根据每一个member来
+		<!--{eval echo strip_tags($member[username]);}-->,
+		<!--{loop $modactioncode $key $val}-->
+			<!--{if $member[$key]['posts']}-->{$member[$key][count]},<!--{else}-->,<!--{/if}-->
+		<!--{/loop}-->
+		$member[total]
+		<!--{echo "\n";}-->
+	<!--{/loop}-->
+	<!--{if $members}-->
+		{lang stats_modworks_total},
+		<!--{loop $modactioncode $key $val}-->
+			<!--{if $total[$key]['posts']}-->{$total[$key][count]},<!--{else}-->,<!--{/if}-->
+		<!--{/loop}-->
+		$total[total]
+	<!--{/if}-->
+<!--{/if}-->
+
